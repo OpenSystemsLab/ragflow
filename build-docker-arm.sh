@@ -1,0 +1,7 @@
+#!/bin/bash
+
+git clone https://github.com/infiniflow/ragflow.git
+cd ragflow/
+uv run download_deps.py
+docker build -f Dockerfile.deps -t infiniflow/ragflow_deps .
+docker build --build-arg LIGHTEN=1 -f Dockerfile -t infiniflow/ragflow:nightly-slim .
