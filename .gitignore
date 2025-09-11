@@ -196,3 +196,6 @@ dist
 # Default backup dir
 backup
 .obsidian/
+
+# Backup files
+*.bak
