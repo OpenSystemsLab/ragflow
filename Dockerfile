@@ -151,14 +151,18 @@ COPY pyproject.toml uv.lock ./
 # uv records index url into uv.lock but doesn't failover among multiple indexes
 RUN --mount=type=cache,id=ragflow_uv,target=/root/.cache/uv,sharing=locked \
     if [ "$NEED_MIRROR" == "1" ]; then \
-        sed -i 's|pypi.org|mirrors.aliyun.com/pypi|g' uv.lock; \
+        sed -i 's|pypi.org/simple|mirrors.aliyun.com/pypi/simple|g' uv.lock; \
     else \
-        sed -i 's|mirrors.aliyun.com/pypi|pypi.org|g' uv.lock; \
+        sed -i 's|mirrors.aliyun.com/pypi/simple|pypi.org/simple|g' uv.lock; \
     fi; \
+    echo "Debug: Contents of uv.lock after sed:"; \
+    head -30 uv.lock | grep registry || true; \
     if [ "$LIGHTEN" == "1" ]; then \
-        uv sync --python 3.10 --frozen; \
+        echo "Debug: Running uv sync --python 3.10 --frozen"; \
+        uv sync --python 3.10 --frozen --verbose; \
     else \
-        uv sync --python 3.10 --frozen --all-extras; \
+        echo "Debug: Running uv sync --python 3.10 --frozen --all-extras"; \
+        uv sync --python 3.10 --frozen --all-extras --verbose; \
     fi
 
 COPY web web
