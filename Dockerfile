@@ -147,23 +147,13 @@ WORKDIR /ragflow
 # install dependencies from uv.lock file
 COPY pyproject.toml uv.lock ./
 
-# https://github.com/astral-sh/uv/issues/10462
-# uv records index url into uv.lock but doesn't failover among multiple indexes
+# Install Python dependencies using uv
+# Since uv.lock already uses pypi.org, we can sync directly
 RUN --mount=type=cache,id=ragflow_uv,target=/root/.cache/uv,sharing=locked \
-    if [ "$NEED_MIRROR" == "1" ]; then \
-        sed -i 's|pypi.org/simple|mirrors.aliyun.com/pypi/simple|g' uv.lock; \
-    else \
-        sed -i 's|mirrors.aliyun.com/pypi/simple|pypi.org/simple|g' uv.lock; \
-    fi; \
-    echo "Debug: Contents of uv.lock after sed:"; \
+    echo "Debug: Contents of uv.lock:"; \
     head -30 uv.lock | grep registry || true; \
-    if [ "$LIGHTEN" == "1" ]; then \
-        echo "Debug: Running uv sync --python 3.10 --frozen"; \
-        uv sync --python 3.10 --frozen --verbose; \
-    else \
-        echo "Debug: Running uv sync --python 3.10 --frozen --all-extras"; \
-        uv sync --python 3.10 --frozen --all-extras --verbose; \
-    fi
+    echo "Debug: Running uv sync --python 3.10 --frozen --all-extras"; \
+    uv sync --python 3.10 --frozen --all-extras --verbose
 
 COPY web web
 COPY docs docs
