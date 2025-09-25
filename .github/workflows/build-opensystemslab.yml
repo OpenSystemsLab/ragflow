@@ -40,11 +40,11 @@ jobs:
     - name: Set image tags
       id: meta
       run: |
-        # Generate tags based on the git ref
+        # Generate clean version tags
         if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-          # For tags like v0.20.5-opensystemslab, extract the version part
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          echo "tags=ghcr.io/opensystemslab/ragflow:${VERSION}" >> $GITHUB_OUTPUT
+          # For tags like v0.20.5 or v0.20.5-opensystemslab, extract just the version number
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//' | sed 's/-opensystemslab$//')
+          echo "tags=ghcr.io/opensystemslab/ragflow:v${VERSION}" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == refs/heads/* ]]; then
           # For branches, use branch name
           BRANCH=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9.-]/-/g')
@@ -71,3 +71,6 @@ jobs:
         build-args: |
           BUILDPLATFORM=linux/amd64
           TARGETPLATFORM=linux/amd64
+          NEED_MIRROR=0
+          LIGHTEN=0
+        outputs: type=registry
