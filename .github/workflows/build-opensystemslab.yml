@@ -37,19 +37,22 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata
+    - name: Set image tags
       id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=sha,prefix={{branch}}-
+      run: |
+        # Generate tags based on the git ref
+        if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          # For tags like v0.20.5-opensystemslab, extract the version part
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          echo "tags=ghcr.io/opensystemslab/ragflow:${VERSION}" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == refs/heads/* ]]; then
+          # For branches, use branch name
+          BRANCH=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9.-]/-/g')
+          echo "tags=ghcr.io/opensystemslab/ragflow:${BRANCH}" >> $GITHUB_OUTPUT
+        else
+          # Fallback
+          echo "tags=ghcr.io/opensystemslab/ragflow:${{ github.sha }}" >> $GITHUB_OUTPUT
+        fi
 
     - name: Build and push Docker image (AMD64 only)
       uses: docker/build-push-action@v6
@@ -59,7 +62,10 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        labels: |
+          org.opencontainers.image.source=https://github.com/opensystemslab/ragflow
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.version=${{ github.ref_name }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
