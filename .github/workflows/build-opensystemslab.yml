@@ -51,7 +51,7 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
           type=sha,prefix={{branch}}-
 
-    - name: Build and push Docker image
+    - name: Build and push Docker image (AMD64 only)
       uses: docker/build-push-action@v6
       with:
         context: .
@@ -62,19 +62,6 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-
-    - name: Build and push slim image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: Dockerfile
-        platforms: linux/amd64
-        push: true
         build-args: |
-          LIGHTEN=1
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:slim
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-slim
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+          BUILDPLATFORM=linux/amd64
+          TARGETPLATFORM=linux/amd64
